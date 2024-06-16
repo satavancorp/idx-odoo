@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  odoo:
+    image: ghcr.io/satavancorp/odoo:14.0
+    restart: always
+    tty: true
+    networks:
+      - odoo
+    ports:
+      - "127.0.0.1:8069:8069"
+      - "127.0.0.1:8072:8072"
+    entrypoint: ["odoo"]
+    command: ["--dev=reload,xml"]
+    depends_on:
+      - postgres
+    volumes:
+      - ./data/odoo/files:/var/lib/odoo
+      - ./config/odoo/odoo.conf:/etc/odoo/odoo.conf
+      - ./data/odoo/extra-addons:/mnt/extra-addons
+  postgres:
+    image: postgres:13.0
+    restart: always
+    networks:
+      - odoo
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    environment:
+      - POSTGRES_DB=odoo
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data/pgdata
+      - ./config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./config/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+
+networks:
+  odoo:
+    driver: bridge
